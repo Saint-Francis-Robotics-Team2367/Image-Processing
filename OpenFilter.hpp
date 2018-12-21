@@ -27,7 +27,8 @@ public:
 
     Filter();
     void config(Mat img);
-    void writeHSV();
+    void writeHSV(string the_file);
+    bool readHSV(const string &the_file);
     Mat edgeDetect(Mat *img);
     Mat* getH();
     Mat* getS();

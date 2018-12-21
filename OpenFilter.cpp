@@ -13,12 +13,12 @@ Filter::Filter(void){
     this->h = new Mat(); // h is hue
     this->s = new Mat(); // s is saturation
     this->v = new Mat(); // v is value/brightness
-    h_min = 40;
-    h_max = 200;
-    s_min = 40;
-    s_max = 200;
-    v_min = 40;
-    v_max = 200;
+    h_min = 0;
+    h_max = 0;
+    s_min = 0;
+    s_max = 0;
+    v_min = 0;
+    v_max = 0;
 }
 
 // returns h pointer
@@ -39,13 +39,24 @@ Mat* Filter::getV()
     return this->v;
 }
 
-void Filter::writeHSV()
+void Filter::writeHSV(string the_file)
 {
     ofstream myfile;
-    myfile.open ("/Users/fangrl4ever/Desktop/HSV.txt");
+    myfile.open (the_file);
     myfile << h_min << endl << h_max << endl << s_min << endl << s_max
     << endl << v_min << endl << v_max;
     myfile.close();
+}
+
+bool Filter::readHSV(const string &the_file)
+{
+    ifstream inFile(the_file);
+    if (inFile >> h_min >> h_max >> s_min >> s_max >> v_min >> v_max)
+    {
+        getchar();
+        return true;
+    }
+    return false;
 }
 
 // converts 1 HSV image to 3 images (one for each H, S, and V values)
@@ -85,7 +96,7 @@ void Filter::config(Mat img)
 
     createTrackbar("V min value", windowLocal, &v_min, Filter::MAX_BINARY_VALUE);
     createTrackbar("V max value", windowLocal, &v_max, Filter::MAX_BINARY_VALUE);
-    
+
     waitKey(100);
 }
 

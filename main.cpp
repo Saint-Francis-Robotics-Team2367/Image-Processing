@@ -21,44 +21,47 @@ int main( int argc, char** argv )
 {
     Mat img_rgb; // image taken in from the user
     img_rgb = imread("/Users/fangrl4ever/Desktop/test.png", 1);
+    const string filename = "/Users/fangrl4ever/Desktop/HSV.txt";
 
     Filter myFilter;
 
-    // configures the min and max threshold values for each h, s, v value
-    myFilter.config(img_rgb);
-
-    int key = 'i';
-    int newKey;
-
-    // view each h, s, v value by typing "h", "s", or "v" respectively
-    // view the edge detected image by typing "i"
-    // when finished setting up values, type "q" to quit
-    do
+    if (!myFilter.readHSV(filename)) // if there is no file/file is empty
     {
-        newKey = waitKey(100);
-        if(newKey == 'h')
-            key = newKey;
-        else if(newKey == 's')
-            key = newKey;
-        else if(newKey == 'v')
-            key = newKey;
-        else if(newKey == 'i')
-            key = 0;
+        // configures the min and max threshold values for each h, s, v value
+        myFilter.config(img_rgb);
 
-        Mat res = myFilter.edgeDetect(&img_rgb);
-        if(key == 'h')
-            res = *myFilter.getH();
-        else if (key == 's')
-            res = *myFilter.getS();
-        else if (key == 'v')
-            res = *myFilter.getV();
+        int key = 'i';
+        int newKey;
 
-        resize(res, res, Size(res.cols/3, res.rows/3));
-        imshow("testWindow", res);
-    }while(newKey != 'q');
+        // view each h, s, v value by typing "h", "s", or "v" respectively
+        // view the edge detected image by typing "i"
+        // when finished setting up values, type "q" to quit
+        do
+        {
+            newKey = waitKey(100);
+            if(newKey == 'h')
+                key = newKey;
+            else if(newKey == 's')
+                key = newKey;
+            else if(newKey == 'v')
+                key = newKey;
+            else if(newKey == 'i')
+                key = 0;
 
-    myFilter.writeHSV();
+            Mat res = myFilter.edgeDetect(&img_rgb);
+            if(key == 'h')
+                res = *myFilter.getH();
+            else if (key == 's')
+                res = *myFilter.getS();
+            else if (key == 'v')
+                res = *myFilter.getV();
 
-    destroyWindow("testWindow");
+            resize(res, res, Size(res.cols/3, res.rows/3));
+            imshow("testWindow", res);
+        }while(newKey != 'q');
+        myFilter.writeHSV(filename);
+
+        destroyWindow("testWindow");
+    }
     return 0;
 }
