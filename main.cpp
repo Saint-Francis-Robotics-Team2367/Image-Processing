@@ -5,7 +5,7 @@
 //  Created by Vivian Zhu on 11/17/18.
 //  Copyright © 2018 Vivian Zhu. All rights reserved.
 //
-
+//OPTMIMIZATION
 #include "opencv2/imgproc.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
