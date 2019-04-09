@@ -6,13 +6,7 @@
 //  Copyright © 2018 Vivian Zhu. All rights reserved.
 //
 //OPTMIMIZATION
-#include "opencv2/imgproc.hpp"
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui.hpp"
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include <tuple>
+
 #include "OpenFilter.hpp"
 using namespace cv;
 using namespace std;

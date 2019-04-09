@@ -53,7 +53,6 @@ bool Filter::readHSV(const string &the_file)
     ifstream inFile(the_file);
     if (inFile >> h_min >> h_max >> s_min >> s_max >> v_min >> v_max)
     {
-        getchar();
         return true;
     }
     return false;
@@ -98,18 +97,30 @@ void Filter::config(Mat img)
     createTrackbar("V max value", windowLocal, &v_max, Filter::MAX_BINARY_VALUE);
 
     waitKey(100);
+
 }
 
-// takes in the min and max threshold values and returns thresholded image
-void Filter::thresh(Mat *img, int min_value, int max_value)
+void Filter::createHash(int min1, int max1, int min2, int max2, int min3,int max3, int (&hash1)[255],int (&hash2)[255], int (&hash3)[255] )
 {
-    Mat min, max, thr;
+   //start applying hash threshold on the most limiting HSV value
+   for (int i =0; i< 255; i++){
+      h_hash[i] =0;
+      s_hash[i] =0;
+      v_hash[i] =0;
 
-    threshold(*img, min, min_value, MAX_BINARY_VALUE, TO_ZERO);
-    threshold(min, max, max_value, MAX_BINARY_VALUE, TO_ZERO_INVERTED);
-    threshold(max, thr, min_value, MAX_BINARY_VALUE, BINARY);
+      if(i > min1 && i < max1){
+         hash1[i] =1;
 
-    *img = thr;
+         if(i > min2 && i < max2){
+            hash2[i] =1;
+
+            if(i > min3 && i < max3){
+               hash3[i] =1;
+            }
+         }
+      }
+   }
+
 }
 
 // takes thresholded h, s, and v images and stacks them, applying a blur,
@@ -118,11 +129,43 @@ Mat Filter::edgeDetect(Mat *img)
 {
     Mat temp_img, stacked_img, edge_img;
 
+   int h_range = h_min - h_max;
+   int s_range = s_min - s_max;
+   int v_range = v_min - v_max;
+
+   if(h_range < s_range && h_range < v_range){
+      if (s_range < v_range){
+         createHash(h_min, h_max, s_min, s_max, v_min, v_max, h_hash, s_hash, v_hash);
+      }
+      else{
+         createHash(h_min, h_max, v_min, v_max, s_min, s_max, h_hash, v_hash, s_hash);
+      }
+   }
+   else if(s_range < h_range && s_range < v_range){
+      if(h_range < v_range){
+         createHash(s_min, s_max,h_min, h_max, v_min, v_max, s_hash, h_hash, v_hash);
+      }
+      else{
+         createHash(s_min, s_max, v_min, v_max, h_min, h_max, s_hash, v_hash, h_hash);
+      }
+   }
+   else if(v_range < h_range && v_range < s_range){
+      if(h_range < s_range){
+         createHash(v_min, v_max, h_min, h_max, s_min, s_max, v_hash, h_hash, s_hash);
+      }
+      else{
+         createHash(v_min, v_max, s_min, s_max, v_min, v_max, v_hash, s_hash, h_hash);
+      }
+
+   }
+
+
+
     createHSV(img);
 
-    thresh(this->h, h_min, h_max);
+  /*  thresh(this->h, h_min, h_max);
     thresh(this->s, s_min, s_max);
-    thresh(this->v, v_min, v_max);
+    thresh(this->v, v_min, v_max); */
 
     // stacking H, S, and V into one picture
     temp_img = *h & *s;
