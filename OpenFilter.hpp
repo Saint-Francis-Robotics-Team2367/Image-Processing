@@ -42,14 +42,12 @@ private:
     const static int BINARY            = 0; // set to 255 if greater than min value
     const static int TO_ZERO           = 3; // set to 0 if less than min value
     const static int TO_ZERO_INVERTED  = 4; // set to 0 if greater than max value
-   int h_hash[255] ={0};
-   int s_hash[255] ={0};
-   int v_hash[255] ={0};
-
-
-
-    void createHash(int min1, int max1, int min2, int max2, int min3,int max3, int (&hash1)[255],int (&hash2)[255], int (&hash3)[255] );
+    int h_hash[255] ={0};
+    int s_hash[255] ={0};
+    int v_hash[255] ={0};
+    void createHash();
     void createHSV(Mat *img);
+    void thresh(Mat *img);
 };
 
 #endif /* OpenFilter_hpp */

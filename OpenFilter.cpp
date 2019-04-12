@@ -53,6 +53,7 @@ bool Filter::readHSV(const string &the_file)
     ifstream inFile(the_file);
     if (inFile >> h_min >> h_max >> s_min >> s_max >> v_min >> v_max)
     {
+        createHash(); //set hash values for HSV
         return true;
     }
     return false;
@@ -98,29 +99,71 @@ void Filter::config(Mat img)
 
     waitKey(100);
 
+    createHash();
+
 }
 
-void Filter::createHash(int min1, int max1, int min2, int max2, int min3,int max3, int (&hash1)[255],int (&hash2)[255], int (&hash3)[255] )
+//predefines what values in image pixel meet threshold
+void Filter::createHash()
 {
-   //start applying hash threshold on the most limiting HSV value
-   for (int i =0; i< 255; i++){
-      h_hash[i] =0;
-      s_hash[i] =0;
-      v_hash[i] =0;
+   for(int i =0; i< 255; i++){
+      h_hash[i]=0;
+      s_hash[i]=0;
+      v_hash[i]=0;
 
-      if(i > min1 && i < max1){
-         hash1[i] =1;
+      if(i > h_min && i < h_max){
+         h_hash[i] =1;
+      }
+      if(i > s_min && i < s_max){
+         s_hash[i] =1;
+      }
+      if(i > v_min && i < v_max){
+         v_hash[i] =1;
+      }
+   }
+}
 
-         if(i > min2 && i < max2){
-            hash2[i] =1;
+void Filter::thresh(Mat *img){
 
-            if(i > min3 && i < max3){
-               hash3[i] =1;
+   int h_range = h_max - h_min;
+   int s_range = s_max - s_min;
+   int v_range = v_max - v_min;
+   int hsv_range[3] = {h_range, s_range, v_range};
+
+   sort(hsv_range, hsv_range + 3);
+   uint8_t* holder = img->data; //do i split into color channels?
+
+   if(hsv_range[0] == h_range){
+
+      for(int i=0; i< img->size().width * img->size().height; i++){
+
+         if((holder[i] = h_hash[holder[i]])){
+            if(hsv_range[1] == s_range){
+               if((holder[i] = s_hash[holder[i]])){
+                  holder[i] = v_hash[holder[i]];
+               }
             }
+         else if (holder[i] = v_hash[holder[i]]){
+
+
+            }
+
          }
+
       }
    }
 
+
+
+
+
+
+   uint8_t* h_holder = h->data; //do i split into color channels?
+   for(int i=0; i< h->size().width * h->size().height; i++){
+      h_holder[i] = h_hash[h_holder[i]];
+
+   }
+   
 }
 
 // takes thresholded h, s, and v images and stacks them, applying a blur,
@@ -128,39 +171,6 @@ void Filter::createHash(int min1, int max1, int min2, int max2, int min3,int max
 Mat Filter::edgeDetect(Mat *img)
 {
     Mat temp_img, stacked_img, edge_img;
-
-   int h_range = h_min - h_max;
-   int s_range = s_min - s_max;
-   int v_range = v_min - v_max;
-
-   if(h_range < s_range && h_range < v_range){
-      if (s_range < v_range){
-         createHash(h_min, h_max, s_min, s_max, v_min, v_max, h_hash, s_hash, v_hash);
-      }
-      else{
-         createHash(h_min, h_max, v_min, v_max, s_min, s_max, h_hash, v_hash, s_hash);
-      }
-   }
-   else if(s_range < h_range && s_range < v_range){
-      if(h_range < v_range){
-         createHash(s_min, s_max,h_min, h_max, v_min, v_max, s_hash, h_hash, v_hash);
-      }
-      else{
-         createHash(s_min, s_max, v_min, v_max, h_min, h_max, s_hash, v_hash, h_hash);
-      }
-   }
-   else if(v_range < h_range && v_range < s_range){
-      if(h_range < s_range){
-         createHash(v_min, v_max, h_min, h_max, s_min, s_max, v_hash, h_hash, s_hash);
-      }
-      else{
-         createHash(v_min, v_max, s_min, s_max, v_min, v_max, v_hash, s_hash, h_hash);
-      }
-
-   }
-
-
-
     createHSV(img);
 
   /*  thresh(this->h, h_min, h_max);
