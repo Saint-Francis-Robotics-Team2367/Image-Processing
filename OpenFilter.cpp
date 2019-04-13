@@ -19,6 +19,7 @@ Filter::Filter(void){
     s_max = 0;
     v_min = 0;
     v_max = 0;
+    
 }
 
 // returns h pointer
@@ -66,7 +67,6 @@ void Filter::createHSV(Mat *img)
     Mat img_hsv;
 
     cvtColor(*img, img_hsv, COLOR_BGR2HSV);
-
     // save H, S, and V values into separate images
     std::vector<Mat> channels;
     split(img_hsv, channels);
@@ -107,9 +107,6 @@ void Filter::config(Mat img)
 void Filter::createHash()
 {
    for(int i =0; i< 255; i++){
-      h_hash[i]=0;
-      s_hash[i]=0;
-      v_hash[i]=0;
 
       if(i > h_min && i < h_max){
          h_hash[i] =1;
@@ -133,38 +130,52 @@ void Filter::thresh(Mat *img){
    sort(hsv_range, hsv_range + 3);
    uint8_t* holder = img->data; //do i split into color channels?
 
-   if(hsv_range[0] == h_range){
+   if(hsv_range[0] == h_range){  //if h is the most restrictive
 
-      for(int i=0; i< img->size().width * img->size().height; i++){
+      for(int i=0; i< img->size().width * img->size().height; i+=3){
 
          if((holder[i] = h_hash[holder[i]])){
-            if(hsv_range[1] == s_range){
-               if((holder[i] = s_hash[holder[i]])){
-                  holder[i] = v_hash[holder[i]];
+            if(hsv_range[1] == s_range){        //if s is second most restrictive
+               if((holder[i+1] = s_hash[holder[i+1]])){
+                  holder[i+2] = v_hash[holder[i+2]];
                }
             }
-         else if (holder[i] = v_hash[holder[i]]){
-
-
+            else if ((holder[i+2] = v_hash[holder[i+2]])){ // or is v is second most
+               holder[i+1] = s_hash[holder[i+1]];
             }
-
          }
-
       }
    }
+   else if(hsv_range[0] == s_range){  //if s value is the most restrictive
 
-
-
-
-
-
-   uint8_t* h_holder = h->data; //do i split into color channels?
-   for(int i=0; i< h->size().width * h->size().height; i++){
-      h_holder[i] = h_hash[h_holder[i]];
-
+      for( int i =1; i < img->size().width * img->size().height; i+=3){
+         if(holder[i] == s_hash[holder[i]]){
+            if(hsv_range[1] == h_range){                 //h is second most restrictive
+               if((holder[i-1] = h_hash[holder[i-1]])){
+                  holder[i+1] = v_hash[holder[i+1]];
+               }
+            }
+            else if ((holder[i+2] = v_hash[holder[i+2]])){   //or v is second most
+               holder[i-1] = h_hash[holder[i-1]];
+            }
+         }
+      }
    }
-   
+   else { //v is the most restrictive
+
+      for( int i = 2; i< img->size().width * img->size().height; i+=3){
+         if(hsv_range[1] == h_range){  //is h is second most restrictive
+            if((holder[i-2] = h_hash[holder[i-2]])){
+               holder[i-1] = s_hash[holder[i-1]];
+            }
+         }
+         else if ((holder[i-1] = s_hash[holder[i-1]])){   //s is second most restrictive
+            holder[i-2] = h_hash[holder[i-2]];
+         }
+      }
+   }
 }
+
 
 // takes thresholded h, s, and v images and stacks them, applying a blur,
 // then uses Sobel for edge detection
@@ -173,27 +184,9 @@ Mat Filter::edgeDetect(Mat *img)
     Mat temp_img, stacked_img, edge_img;
     createHSV(img);
 
-  /*  thresh(this->h, h_min, h_max);
-    thresh(this->s, s_min, s_max);
-    thresh(this->v, v_min, v_max); */
-
     // stacking H, S, and V into one picture
     temp_img = *h & *s;
     stacked_img = temp_img & *v;
-
-    // Sobel
-    int ksize = 1;
-    int scale = 4;
-    int delta = 0;
-    int ddepth = CV_16S;
-    GaussianBlur(stacked_img, edge_img, Size(3, 3), 0, 0, BORDER_DEFAULT);
-    Mat grad_x, grad_y;
-    Mat abs_grad_x, abs_grad_y;
-    Sobel(edge_img, grad_x, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT);
-    Sobel(edge_img, grad_y, ddepth, 0, 1, ksize, scale, delta, BORDER_DEFAULT);
-    convertScaleAbs(grad_x, abs_grad_x); // converting back to CV_8U
-    convertScaleAbs(grad_y, abs_grad_y);
-    addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, stacked_img);
 
     return stacked_img;
 }
