@@ -30,6 +30,7 @@ public:
     void writeHSV(string the_file);
     bool readHSV(const string &the_file);
     Mat edgeDetect(Mat *img);
+    Mat edgeDetectConfig(Mat *img);
     Mat* getH();
     Mat* getS();
     Mat* getV();
@@ -47,7 +48,8 @@ private:
     int v_hash[255] ={0};
     void createHash();
     void createHSV(Mat *img);
-    void thresh(Mat *img);
+    void hashThresh(Mat *img);
+    void thresh(Mat *img, int min_value, int max_value);
 };
 
 #endif /* OpenFilter_hpp */

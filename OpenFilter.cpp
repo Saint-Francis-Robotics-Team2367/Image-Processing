@@ -120,7 +120,18 @@ void Filter::createHash()
    }
 }
 
-void Filter::thresh(Mat *img){
+void Filter::thresh(Mat *img, int min_value, int max_value)
+{
+   Mat min, max, thr;
+
+   threshold(*img, min, min_value, MAX_BINARY_VALUE, TO_ZERO);
+   threshold(min, max, max_value, MAX_BINARY_VALUE, TO_ZERO_INVERTED);
+   threshold(max, thr, min_value, MAX_BINARY_VALUE, BINARY);
+
+   *img = thr;
+}
+
+void Filter::hashThresh(Mat *img){
 
    int h_range = h_max - h_min;
    int s_range = s_max - s_min;
@@ -130,63 +141,123 @@ void Filter::thresh(Mat *img){
    sort(hsv_range, hsv_range + 3);
    uint8_t* holder = img->data; //do i split into color channels?
 
-   if(hsv_range[0] == h_range){  //if h is the most restrictive
+   if(hsv_range[0] == h_range){
 
       for(int i=0; i< img->size().width * img->size().height; i+=3){
 
-         if((holder[i] = h_hash[holder[i]])){
-            if(hsv_range[1] == s_range){        //if s is second most restrictive
-               if((holder[i+1] = s_hash[holder[i+1]])){
-                  holder[i+2] = v_hash[holder[i+2]];
-               }
+         if((holder[i] = h_hash[holder[i]]) < 1){  //if h pixel is not in threshhold
+            holder[i+1] = 0;  //set s to zero
+            holder[i+2] = 0;  //set v to zero
+         }
+         else if(hsv_range[1] == s_range){   //if h is threshhold and s is second restrictive
+            if((holder[i+1] =s_hash[holder[i]]) < 1){  //if s does not meet thresh
+               holder[i+2] = 0;  //set v to zero
             }
-            else if ((holder[i+2] = v_hash[holder[i+2]])){ // or is v is second most
-               holder[i+1] = s_hash[holder[i+1]];
+            else {
+               holder[i+2] = v_hash[holder[i+2]];   //if meets h and s thresh, check v thresh
+            }
+         }
+         else {
+            if((holder[i+2] = v_hash[holder[i+2]])<1){
+               holder[i+1] =0;
+            }
+            else{
+               holder[i+1] =s_hash[holder[i+1]];
             }
          }
       }
    }
-   else if(hsv_range[0] == s_range){  //if s value is the most restrictive
+   else if (hsv_range[0] == s_range){  //if s is most restrictive
 
-      for( int i =1; i < img->size().width * img->size().height; i+=3){
-         if(holder[i] == s_hash[holder[i]]){
-            if(hsv_range[1] == h_range){                 //h is second most restrictive
-               if((holder[i-1] = h_hash[holder[i-1]])){
-                  holder[i+1] = v_hash[holder[i+1]];
-               }
+      for(int i =1; i< img->size().width * img->size().height; i+=3){
+
+         if((holder[i] = s_hash[holder[i]])<1){  //if s fails
+            holder[i-1] =0;   //set H and v to zero
+            holder[i+1] =0;
+         }
+         else if (hsv_range[1] == h_range){ //if H meets thresh check if H is second most restrictive
+            if((holder[i-1] = h_hash[holder[i-1]]) < 1){ //if H fails, V fails
+               holder[i+1] = 0;
             }
-            else if ((holder[i+2] = v_hash[holder[i+2]])){   //or v is second most
-               holder[i-1] = h_hash[holder[i-1]];
+            else{
+               holder[i+1] = v_hash[holder[i+1]];
+            }
+         }
+         else{    //if v  is second most restrictive
+            if((holder[i+1] = v_hash[holder[i+1]])<1){
+               holder[i-1] =0;
+            }
+            else{
+               holder[i-1] =h_hash[holder[i-1]];
             }
          }
       }
    }
-   else { //v is the most restrictive
+   else{ //v is most restrictive
 
-      for( int i = 2; i< img->size().width * img->size().height; i+=3){
-         if(hsv_range[1] == h_range){  //is h is second most restrictive
-            if((holder[i-2] = h_hash[holder[i-2]])){
-               holder[i-1] = s_hash[holder[i-1]];
+      for(int i=2; i < img->size().width * img->size().height; i+=3){
+
+         if((holder[i] = v_hash[holder[i]])<1){  //if v fails
+            holder[i-2] =0;   //set H and S to zero
+            holder[i-1] =0;
+         }
+         else if (hsv_range[1] == h_range){ //if H meets thresh check if H is second most restrictive
+            if((holder[i-2] = h_hash[holder[i-2]]) < 1){ //if H fails, s fails
+               holder[i-1] = 0;
+            }
+            else{
+               holder[i-1] = s_hash[holder[i-1]]; //else check s
             }
          }
-         else if ((holder[i-1] = s_hash[holder[i-1]])){   //s is second most restrictive
-            holder[i-2] = h_hash[holder[i-2]];
+         else{    //if s  is second most restrictive
+            if((holder[i-1] = s_hash[holder[i-1]])<1){
+               holder[i-2] =0;
+            }
+            else{
+               holder[i-2] =h_hash[holder[i-2]];
+            }
          }
       }
    }
 }
 
-
 // takes thresholded h, s, and v images and stacks them, applying a blur,
 // then uses Sobel for edge detection
 Mat Filter::edgeDetect(Mat *img)
 {
-    Mat temp_img, stacked_img, edge_img;
-    createHSV(img);
+    Mat img_hsv;
+    cvtColor(*img, img_hsv, COLOR_BGR2HSV);
+    hashThresh(&img_hsv);
+    return img_hsv;
+}
 
-    // stacking H, S, and V into one picture
-    temp_img = *h & *s;
-    stacked_img = temp_img & *v;
+Mat Filter::edgeDetectConfig(Mat *img){
 
-    return stacked_img;
+   Mat temp_img, stacked_img, edge_img;
+
+   createHSV(img);
+
+   thresh(this->h, h_min, h_max);
+   thresh(this->s, s_min, s_max);
+   thresh(this->v, v_min, v_max);
+
+   // stacking H, S, and V into one picture
+   temp_img = *h & *s;
+   stacked_img = temp_img & *v;
+
+   // Sobel
+   int ksize = 1;
+   int scale = 4;
+   int delta = 0;
+   int ddepth = CV_16S;
+   GaussianBlur(stacked_img, edge_img, Size(3, 3), 0, 0, BORDER_DEFAULT);
+   Mat grad_x, grad_y;
+   Mat abs_grad_x, abs_grad_y;
+   Sobel(edge_img, grad_x, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT);
+   Sobel(edge_img, grad_y, ddepth, 0, 1, ksize, scale, delta, BORDER_DEFAULT);
+   convertScaleAbs(grad_x, abs_grad_x); // converting back to CV_8U
+   convertScaleAbs(grad_y, abs_grad_y);
+   addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, stacked_img);
+
+   return stacked_img;
 }

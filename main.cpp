@@ -14,7 +14,7 @@ using namespace std;
 int main( int argc, char** argv )
 {
     Mat img_rgb; // image taken in from the user
-    img_rgb = imread("/Users/fangrl4ever/Desktop/test.png", 1);
+    img_rgb = imread("/Users/margaretpeterson/Desktop/image.png", 1);
     const string filename = "/Users/fangrl4ever/Desktop/HSV.txt";
 
     Filter myFilter;
@@ -42,7 +42,7 @@ int main( int argc, char** argv )
             else if(newKey == 'i')
                 key = 0;
 
-            Mat res = myFilter.edgeDetect(&img_rgb);
+            Mat res = myFilter.edgeDetectConfig(&img_rgb);
             if(key == 'h')
                 res = *myFilter.getH();
             else if (key == 's')
@@ -57,5 +57,6 @@ int main( int argc, char** argv )
 
         destroyWindow("testWindow");
     }
+
     return 0;
 }
