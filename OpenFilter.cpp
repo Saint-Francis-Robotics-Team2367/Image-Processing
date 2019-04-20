@@ -19,7 +19,6 @@ Filter::Filter(void){
    s_max = 0;
    v_min = 0;
    v_max = 0;
-
 }
 
 // returns h pointer
@@ -102,7 +101,7 @@ void Filter::config(Mat img)
 
 }
 
-//predefines what values in image pixel meet threshold
+//precomputes what HSV values meet threshold
 void Filter::createHash()
 {
    for(int i =0; i< 255; i++){
@@ -117,24 +116,9 @@ void Filter::createHash()
          v_hash[i] =255;
       }
    }
-
-   cout<<"H "<<endl;
-   for(int i =0; i< 255; i++){
-      cout<<h_hash[i]<<", ";
-   }
-
-   cout<<"S "<<endl;
-   for(int i =0; i< 255; i++){
-
-      cout<<s_hash[i]<<", ";
-   }
-   cout<<"V "<<endl;
-   for(int i =0; i< 255; i++){
-
-      cout<<v_hash[i]<<", ";
-   }
 }
 
+//sets thresh for config
 void Filter::thresh(Mat *img, int min_value, int max_value)
 {
    Mat min, max, thr;
@@ -146,6 +130,7 @@ void Filter::thresh(Mat *img, int min_value, int max_value)
    *img = thr;
 }
 
+//uses values in HSV hash to check if pixel meets thresh, sets value to (255,255,255)
 void Filter::hashThresh(Mat *img){
    uint8_t* mover = img->data;
    uint8_t* end = mover + img->size().width * img->size().height * img->channels();
