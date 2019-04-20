@@ -132,17 +132,18 @@ void Filter::thresh(Mat *img, int min_value, int max_value)
 
 //uses values in HSV hash to check if pixel meets thresh, sets value to (255,255,255)
 void Filter::hashThresh(Mat *img){
-   uint8_t* mover = img->data;
-   uint8_t* end = mover + img->size().width * img->size().height * img->channels();
+   #if  (defined(__x86_64) ||  defined(__amd64))  && defined(__SSE__) //use the SSE3 if on pc
+      inRange(*img, Scalar(h_min, s_min, v_min), Scalar(h_max,s_max,v_max), *img);
+   #else //otherwise use our algorithm
+      uint8_t* mover = img->data;
+      uint8_t* end = mover + img->size().width * img->size().height * img->channels();
 
-   while(mover< end)
-   {
-      int res = 0;
-      if(h_hash[mover[0]] && s_hash[mover[1]] && v_hash[mover[2]])
-         res = 255;
-      memset(mover, res, 3);
-      mover += 3;
-   }
+      while(mover< end)
+      {
+         memset(mover, h_hash[mover[0]] & s_hash[mover[1]] & v_hash[mover[2]], 3);
+         mover += 3;
+      }
+   #endif
 }
 
 // takes thresholded h, s, and v images and stacks them, applying a blur,
