@@ -101,7 +101,7 @@ void Filter::config(Mat img)
 
 }
 
-//precomputes what HSV values meet threshold
+//predefines what values in image pixel meet threshold
 void Filter::createHash()
 {
    for(int i =0; i< 255; i++){
@@ -118,7 +118,6 @@ void Filter::createHash()
    }
 }
 
-//sets thresh for config
 void Filter::thresh(Mat *img, int min_value, int max_value)
 {
    Mat min, max, thr;
@@ -130,20 +129,28 @@ void Filter::thresh(Mat *img, int min_value, int max_value)
    *img = thr;
 }
 
-//uses values in HSV hash to check if pixel meets thresh, sets value to (255,255,255)
-void Filter::hashThresh(Mat *img){
-   #if  (defined(__x86_64) ||  defined(__amd64))  && defined(__SSE__) //use the SSE3 if on pc
-      inRange(*img, Scalar(h_min, s_min, v_min), Scalar(h_max,s_max,v_max), *img);
-   #else //otherwise use our algorithm
-      uint8_t* mover = img->data;
-      uint8_t* end = mover + img->size().width * img->size().height * img->channels();
+struct px{
+   uint8_t h;
+   uint8_t s;
+   uint8_t v;
+};
 
-      while(mover< end)
-      {
-         memset(mover, h_hash[mover[0]] & s_hash[mover[1]] & v_hash[mover[2]], 3);
-         mover += 3;
-      }
-   #endif
+void Filter::hashThresh(Mat *img){
+
+#if  (defined(__x86_64) ||  defined(__amd64))  && defined(__SSE__) //use the SSE3 if on pc
+   inRange(*img, Scalar(h_min, s_min, v_min), Scalar(h_max,s_max,v_max), *img);
+
+#else //otherwise use our algorithm */
+   struct px *mover = (struct px *)img->data;
+   struct px *end = mover + img->size().width * img->size().height;
+
+   while(mover< end)
+   {
+      uint8_t res =h_hash[mover->h] & s_hash[mover->s] & v_hash[mover->v];
+      memset(mover, res, 3);
+      mover++;
+   }
+#endif
 }
 
 // takes thresholded h, s, and v images and stacks them, applying a blur,
