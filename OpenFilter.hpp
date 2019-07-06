@@ -25,7 +25,7 @@ class Filter {
 public:
 
    Filter();
-   void config(Mat img);
+   void config(Mat *img);
    void createHash();
    void writeHSV(string the_file);
    bool readHSV(const string &the_file);

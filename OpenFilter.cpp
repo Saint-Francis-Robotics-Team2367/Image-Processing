@@ -39,7 +39,7 @@ Mat* Filter::getV()
    return this->v;
 }
 
-void Filter::writeHSV(string the_file)
+void Filter::writeHSV(const string the_file)
 {
    ofstream myfile;
    myfile.open (the_file);
@@ -75,9 +75,9 @@ void Filter::createHSV(Mat *img)
 }
 
 // allows the user to continuously edit the h, s, v min & max threhold values
-void Filter::config(Mat img)
+void Filter::config(Mat *img)
 {
-   createHSV(&img);
+   createHSV(img);
 
    //resize(img, img, Size(img.cols/3, img.rows/3));
    const char *windowLocal = "Test";
@@ -85,7 +85,7 @@ void Filter::config(Mat img)
    waitKey(100);
 
    waitKey(100);
-   imshow(windowLocal, img);
+   imshow(windowLocal, *img);
 
    createTrackbar("H min value", windowLocal, &h_min, Filter::MAX_BINARY_VALUE);
    createTrackbar("H max value", windowLocal, &h_max, Filter::MAX_BINARY_VALUE);
@@ -129,18 +129,12 @@ void Filter::thresh(Mat *img, int min_value, int max_value)
    *img = thr;
 }
 
-struct px{
-   uint8_t h;
-   uint8_t s;
-   uint8_t v;
-};
-
 void Filter::hashThresh(Mat *img){
 
 #if  (defined(__x86_64) ||  defined(__amd64))  && defined(__SSE__) //use the SSE3 if on pc
    inRange(*img, Scalar(h_min, s_min, v_min), Scalar(h_max,s_max,v_max), *img);
 
-#else //otherwise use our algorithm */
+#else //otherwise use our algorithm
    struct px *mover = (struct px *)img->data;
    struct px *end = mover + img->size().width * img->size().height;
 
