@@ -1,8 +1,8 @@
 # **OpenFilter for Vision Processing** <br>
-Library for FRC Vision Processing that runs HSV threshholds over the raw vision target image and produces a black and white image.
+Library for FRC Vision Processing that uses OpenCV and runs HSV threshholds over the raw vision target image to produce a black and white image.
 Before the distance and angle to the vision target can be calculated, the vision target has to be distinguishible from the rest of the image. If the pixels are within the HSV range as the vision target, they turn white, otherwise are black.
 
-##**Documentation**
+## **Documentation**
 - ```void config(Mat *img_rgb)``` <br>
 Used to config HSV value range for identifying vision targets. Calls ``createHSV(Mat * img)`` which splits the RGB image into HSV channels. Creates a trackbar to adjust the HSV values on the separate HSV channels. The trackbar values are written into H_min, H_max, V_min, V_max, S_min, S_max. When the H,S, and V keys are pressed, it shows the individual channel.
 
@@ -24,6 +24,8 @@ Writes the HSV min and max values into a txt file.
 - ```bool readHSV(const string &the_file)```<br>
 Reads the HSV min and max values from a file and updates the HSV variables.
 
+## **Result**
+![filtered image](https://drive.google.com/file/d/1K8aUvCH4nMDFwJppCLg4XhXgmpkN1Mnr/view?usp=sharing)
 
 
   
