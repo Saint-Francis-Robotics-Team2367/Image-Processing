@@ -7,10 +7,10 @@ Before the distance and angle to the vision target can be calculated, the vision
 Used to config HSV value range for identifying vision targets. Calls ``createHSV(Mat * img)`` which splits the RGB image into HSV channels. Creates a trackbar to adjust the HSV values on the separate HSV channels. The trackbar values are written into H_min, H_max, V_min, V_max, S_min, S_max. When the H,S, and V keys are pressed, it shows the individual channel.
 
 - ```Mat edgeDetectConfig(Mat *img_rgb)``` <br>
-Everytime the value on the trackbar changes, the HSV filtering is applied to that image and updated. This uses OpenCV methods for grayscaling the image, applying a blur, and sobel edge detection to see what the image would look like with the set HSV values. It returns the filtered image as a cv::Mat.
+Everytime the value on the trackbar changes, the HSV filtering is applied to that image and updated. This uses OpenCV methods for grayscaling the image, applying a blur, and sobel edge detection to see what the image would look like with the set HSV values. It returns the filtered image as a cv::Mat. This should only be used to config the HSV ranges, not during real time processing. 
 
 - ```void createHash()``` <br>
-After the HSV min and max values are configured, this precomputes 3 hash tables (hue, saturation, value) for HSV filtering the image. For i = 0-255, if the i is between the min and max, the hashtable value at index i is set to 255 for white. 
+After the HSV min and max values are configured, this precomputes 3 hash tables (hue, saturation, value) for HSV filtering the image. For i = 0-255, if the i is between the HSV min and max, the hashtable value at index i is set to 255 for white. 
 
 - ```void hashThresh(Mat *img_hsv)```<br>
  HashThresh() interates through the Mat image pixels, and if the HSV value index in the hash table are all 255, the pixel is set to white.
